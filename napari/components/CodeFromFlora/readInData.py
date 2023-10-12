@@ -287,46 +287,43 @@ def cutBound_withBound(ctData, bound):
 
 ### Laura
 
-def plotCT(cponly, M=None):
-    if cponly == True:
-        #read CT file
-        # directory_path = '/Users/laurayu/Desktop/CV/M1/CT/'
-        print('please select the folder containing your CT dicom data')
-        directory_path = browse_folder()
-        f_list = os.listdir(directory_path)
-        file_path = [None] * len(f_list)
-        n = 0
-        for file_name in f_list:
-            file_path[n] = os.path.join(directory_path, file_name)
-            n += 1
-        M, inform = readCTDataFromDicom(file_path)
+def plotCT(cponly=True, M=None):
+    if cponly:
+        if M is None:
+            print('Please select the parent folder containing your CT and PET DICOM data')
+            directory_path = browse_folder()
 
-        # read PET file
-        # directory_path_pet = '/Users/laurayu/Desktop/CV/M1/PET/'
-        print('please select the folder containing your PET dicom data')
-        directory_path_pet = browse_folder()
-        fpet_list = os.listdir(directory_path_pet)
-        file_path_pet = [None] * len(fpet_list)
-        n = 0
-        for file_name in fpet_list:
-            file_path_pet[n] = os.path.join(directory_path_pet, file_name)
-            n += 1
-        M_pet, inform_pet = readPETDataFromDicom(file_path_pet)
-        suv = bqmlToSUV(M_pet, inform_pet)
-        largePET = resamplePET(suv, inform_pet['pixel_size'][::-1].astype(np.float64),
-                               interpolateMethod=sitk.sitkLinear, targetSize=M.shape[::-1],
-                               targetSpace=(inform["pixel_size"][::-1].astype(np.float64)))
-        adj = [10, 2, -55]
-        largePET = np.roll(largePET, adj[0], axis=0)
-        largePET = np.roll(largePET, adj[1], axis=1)
-        largePET = np.roll(largePET, adj[2], axis=2)
-        M, bound = cutBound(M)
-        largePET = cutBound_withBound(largePET, bound)
+            ct_directory = os.path.join(directory_path, 'CT')
+            pet_directory = os.path.join(directory_path, 'PET')
 
-        return(M,largePET)
+            ct_files = os.listdir(ct_directory)
+            pet_files = os.listdir(pet_directory)
+
+            ct_file_paths = [os.path.join(ct_directory, file_name) for file_name in ct_files]
+            pet_file_paths = [os.path.join(pet_directory, file_name) for file_name in pet_files]
+
+            M, inform = readCTDataFromDicom(ct_file_paths)
+            M_pet, inform_pet = readPETDataFromDicom(pet_file_paths)
+
+            suv = bqmlToSUV(M_pet, inform_pet)
+            largePET = resamplePET(
+                suv, inform_pet['pixel_size'][::-1].astype(np.float64),
+                interpolateMethod=sitk.sitkLinear,
+                targetSize=M.shape[::-1],
+                targetSpace=(inform["pixel_size"][::-1].astype(np.float64))
+            )
+
+            adj = [10, 2, -55]
+            largePET = np.roll(largePET, adj[0], axis=0)
+            largePET = np.roll(largePET, adj[1], axis=1)
+            largePET = np.roll(largePET, adj[2], axis=2)
+
+            M, bound = cutBound(M)
+            largePET = cutBound_withBound(largePET, bound)
+
+        return M, largePET
     else:
         mymask = predictUnknown(M)
-        # mymask = np.load('/Users/laurayu/Desktop/CIG/CodeFromFlora/outfile_0728_loadpath_otherbone.npy')
         maskcode = mymask
 
-        return(maskcode)
+        return maskcode

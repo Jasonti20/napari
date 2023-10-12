@@ -9,7 +9,7 @@ from pathlib import Path
 from datetime import datetime
 import pydicom
 import matplotlib.pyplot as plt
-loadpath = '/Users/laurayu/Desktop/CV/napari/napari/components/CodeFromFlora'
+loadpath = 'napari/components/CodeFromFlora'
 # loadpath = str(Path().resolve().absolute())
 print(loadpath)
 with open(os.path.join(loadpath, "config.json")) as File:
